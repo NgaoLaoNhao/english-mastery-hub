@@ -1,0 +1,47 @@
+# Build directories
+build/
+build-*/
+out/
+*.user
+*.user.*
+CMakeLists.txt.user*
+
+# Compiled
+*.o
+*.obj
+*.exe
+*.dll
+*.lib
+*.a
+*.qm
+
+# CMake artifacts
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Qt-generated
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+*.autogen/
+
+# IDE
+.vscode/
+.idea/
+.qtcreator/
+.cache/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local DB
+*.db
+*.db-journal
+
+# User files (avatar, uploads)
+appdata/
