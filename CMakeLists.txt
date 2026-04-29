@@ -21,11 +21,13 @@ qt_add_qml_module(appEnglishMasteryHub
         LoginView.qml
         ChangePasswordView.qml
         WelcomeView.qml
+        mocks/MockAuthController.qml
     SOURCES
         core/databasemanager.h
         core/databasemanager.cpp
         controllers/authcontroller.h
         controllers/authcontroller.cpp
+        QML_FILES mocks/MockAuthController.qml
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
