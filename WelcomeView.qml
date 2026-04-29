@@ -6,7 +6,7 @@ Item {
     id: root
     property var auth: null
     signal logoutRequested()                       // <-- THÊM
-
+    signal openAdminPanel()
     ColumnLayout {
         anchors.centerIn: parent
         width: 360
@@ -49,9 +49,16 @@ Item {
         Item { Layout.preferredHeight: 20 }
 
         Button {
+            visible: auth && auth.currentRole === "admin"          // <-- chỉ admin thấy
+            text: "🛠 Quản trị"
+            Layout.fillWidth: true
+            onClicked: root.openAdminPanel()
+        }
+
+        Button {
             text: "Đăng xuất"
             Layout.fillWidth: true
-            onClicked: root.logoutRequested()       // <-- ĐỔI: phát signal thay vì gọi auth.logout()
+            onClicked: root.logoutRequested()
         }
     }
 }

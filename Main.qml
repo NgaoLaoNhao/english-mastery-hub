@@ -12,16 +12,20 @@ ApplicationWindow {
     // ============================================================
     // FLAG SWITCH MOCK/REAL — đổi 1 dòng để chuyển toàn app
     // ============================================================
-    readonly property bool useMocks: false
+    readonly property bool useMocks: true
 
     // Mock instance (luôn được tạo, chỉ dùng nếu useMocks=true)
     MockAuthController { id: mockAuth }
+    MockAdminUserController { id: mockAdminUser }
+    MockAdminGroupController { id: mockAdminGroup }
 
     // realAuthController được expose từ main.cpp qua setContextProperty
     // -> tham chiếu trực tiếp tên đó.
 
     readonly property var auth: useMocks ? mockAuth : realAuthController
-
+    // Admin user controller (TODO: realAdminUserController sẽ có ở DB track)
+    readonly property var adminUser: useMocks ? mockAdminUser : null
+    readonly property var adminGroup: useMocks ? mockAdminGroup : null
     // ============================================================
     // Router — dùng StackView + Component
     // ============================================================
@@ -61,6 +65,17 @@ ApplicationWindow {
                 root.auth.logout()
                 stack.replace(loginPage)
             }
+            onOpenAdminPanel: stack.replace(adminPanelPage)    // <-- THÊM
+        }
+    }
+
+    Component {                                                // <-- THÊM CẢ COMPONENT MỚI
+        id: adminPanelPage
+        AdminPanelView {
+            auth: root.auth
+            adminUser: root.adminUser
+            adminGroup: root.adminGroup
+            onBackToWelcome: stack.replace(welcomePage)
         }
     }
 }
