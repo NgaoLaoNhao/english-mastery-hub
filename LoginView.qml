@@ -4,6 +4,8 @@ import QtQuick.Layouts
 
 Item {
     id: root
+    property var auth: null
+    signal loginOk()
 
     ColumnLayout {
         anchors.centerIn: parent
@@ -28,7 +30,7 @@ Item {
             id: usernameField
             Layout.fillWidth: true
             placeholderText: "Tên đăng nhập"
-            text: "admin"  // Pre-fill cho tiện test, sau M1 có thể xoá
+            text: "admin"
         }
 
         TextField {
@@ -36,7 +38,7 @@ Item {
             Layout.fillWidth: true
             placeholderText: "Mật khẩu"
             echoMode: TextInput.Password
-            onAccepted: loginButton.clicked()  // Enter = bấm nút
+            onAccepted: loginButton.clicked()
         }
 
         Button {
@@ -46,6 +48,7 @@ Item {
             onClicked: {
                 errorLabel.text = ""
                 auth.login(usernameField.text, passwordField.text)
+                // Không check return — đợi signal currentUserChanged hoặc loginFailed
             }
         }
 
@@ -58,9 +61,14 @@ Item {
         }
     }
 
-    // Lắng nghe signal loginFailed từ C++
     Connections {
-        target: auth
+        target: root.auth
+        function onCurrentUserChanged() {
+            // Chỉ navigate khi vừa login THÀNH CÔNG (isLoggedIn -> true)
+            if (root.auth.isLoggedIn) {
+                root.loginOk()
+            }
+        }
         function onLoginFailed(reason) {
             errorLabel.text = reason
         }

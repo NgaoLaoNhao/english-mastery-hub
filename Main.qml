@@ -1,59 +1,66 @@
-// file: Main.qml  (FULL FILE — thay thế nội dung cũ)
-//
-// =============================================================
-//  Root window + Router của app.
-//  Chứa "công tắc" useMocks để switch giữa Mock (QML) và Real (C++).
-// =============================================================
-
 import QtQuick
-import QtQuick.Controls.Basic
+import QtQuick.Window
+import QtQuick.Controls
 
-// Import folder mocks/ với alias "Mocks" để tránh đụng namespace.
-import "mocks" as Mocks
-
-Window {
-    id: mainWindow
-    width: 480
-    height: 560
+ApplicationWindow {
+    id: root
+    width: 1200
+    height: 800
     visible: true
     title: qsTr("English Mastery Hub")
 
-    // ─── Công tắc Mock-first ──────────────────────────────────
-    //  true  = chạy bằng MockAuthController (QML thuần, không cần DB)
-    //  false = chạy bằng AuthController C++ (context property "authController")
-    //
-    //  ⚠️ QUY ƯỚC TEAM: trước khi merge vào main, mặc định FALSE.
-    //  Khi dev UI cục bộ thì tự bật TRUE rồi tắt lại trước khi commit.
-    property bool useMocks: false
+    // ============================================================
+    // FLAG SWITCH MOCK/REAL — đổi 1 dòng để chuyển toàn app
+    // ============================================================
+    readonly property bool useMocks: false
 
-    // ─── Mock instance (luôn tồn tại, chỉ được dùng khi useMocks === true) ──
-    Mocks.MockAuthController {
-        id: mockAuthController
+    // Mock instance (luôn được tạo, chỉ dùng nếu useMocks=true)
+    MockAuthController { id: mockAuth }
+
+    // realAuthController được expose từ main.cpp qua setContextProperty
+    // -> tham chiếu trực tiếp tên đó.
+
+    readonly property var auth: useMocks ? mockAuth : realAuthController
+
+    // ============================================================
+    // Router — dùng StackView + Component
+    // ============================================================
+    StackView {
+        id: stack
+        anchors.fill: parent
+        initialItem: loginPage
     }
 
-    // ─── Biến `auth` trung gian — tất cả View con dùng cái này ──
-    //  Mọi View đọc property / gọi function / Connections target tới `auth`,
-    //  KHÔNG còn đụng trực tiếp `authController` hay `mockAuthController`.
-    //  Nhờ vậy đổi useMocks là 1 dòng, View không phải sửa gì.
-    property var auth: useMocks ? mockAuthController : authController
+    Component {
+        id: loginPage
+        LoginView {
+            auth: root.auth
+            onLoginOk: {
+                if (root.auth.mustChangePassword) {
+                    stack.replace(changePassPage)
+                } else {
+                    stack.replace(welcomePage)
+                }
+            }
+        }
+    }
 
-    // ─── Component templates (Lazy load, chỉ instantiate khi cần) ──
-    Component { id: loginComponent;       LoginView          {} }
-    Component { id: changePassComponent;  ChangePasswordView {} }
-    Component { id: welcomeComponent;     WelcomeView        {} }
+    Component {
+        id: changePassPage
+        ChangePasswordView {
+            auth: root.auth
+            onChangeOk: stack.replace(welcomePage)
+        }
+    }
 
-    // ─── Router: chọn View dựa trên state auth ─────────────────
-    Loader {
-        id: rootLoader
-        anchors.fill: parent
-        sourceComponent: {
-            // Binding này tự re-evaluate khi auth.isLoggedIn hoặc
-            // auth.mustChangePassword đổi (vì truy cập property của auth).
-            if (!mainWindow.auth.isLoggedIn)
-                return loginComponent
-            if (mainWindow.auth.mustChangePassword)
-                return changePassComponent
-            return welcomeComponent
+    Component {
+        id: welcomePage
+        WelcomeView {
+            auth: root.auth
+            onLogoutRequested: {
+                root.auth.logout()
+                stack.replace(loginPage)
+            }
         }
     }
 }

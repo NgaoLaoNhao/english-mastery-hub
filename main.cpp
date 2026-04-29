@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
     AuthController authController;
 
     QQmlApplicationEngine engine;
-    engine.rootContext()->setContextProperty("authController", &authController);
+    engine.rootContext()->setContextProperty("realAuthController", &authController);
 
     // ─── Bắt sự kiện engine load lỗi ────────────────────────────────
     QObject::connect(

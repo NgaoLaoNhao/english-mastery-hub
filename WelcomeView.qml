@@ -4,6 +4,8 @@ import QtQuick.Layouts
 
 Item {
     id: root
+    property var auth: null
+    signal logoutRequested()                       // <-- THÊM
 
     ColumnLayout {
         anchors.centerIn: parent
@@ -17,24 +19,23 @@ Item {
         }
 
         Label {
-            // Hiện display name nếu có, fallback về username
-            text: auth.currentDisplayName.length > 0
+            text: auth && auth.currentDisplayName && auth.currentDisplayName.length > 0
                   ? auth.currentDisplayName
-                  : auth.currentUsername
+                  : (auth ? auth.currentUsername : "")
             font.pixelSize: 28
             font.bold: true
             Layout.alignment: Qt.AlignHCenter
         }
 
         Label {
-            text: "Vai trò: " + (auth.currentRole === "admin"
-                                 ? "Quản trị viên 👑"
-                                 : "Thành viên")
+            text: "Vai trò: " + (auth && auth.currentRole === "admin"
+                                ? "Quản trị viên 👑"
+                                : "Thành viên")
             color: "#666"
             Layout.alignment: Qt.AlignHCenter
         }
 
-        Item { Layout.preferredHeight: 20 }  // Spacer
+        Item { Layout.preferredHeight: 20 }
 
         Label {
             text: "🚧 Các tính năng khác sẽ được phát triển ở Milestone 2 trở đi."
@@ -45,12 +46,12 @@ Item {
             horizontalAlignment: Text.AlignHCenter
         }
 
-        Item { Layout.preferredHeight: 20 }  // Spacer
+        Item { Layout.preferredHeight: 20 }
 
         Button {
             text: "Đăng xuất"
             Layout.fillWidth: true
-            onClicked: auth.logout()
+            onClicked: root.logoutRequested()       // <-- ĐỔI: phát signal thay vì gọi auth.logout()
         }
     }
 }

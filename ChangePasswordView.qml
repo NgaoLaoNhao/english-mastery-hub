@@ -4,6 +4,8 @@ import QtQuick.Layouts
 
 Item {
     id: root
+    property var auth: null
+    signal changeOk()
 
     ColumnLayout {
         anchors.centerIn: parent
@@ -58,6 +60,7 @@ Item {
                     return
                 }
                 auth.changePassword(oldField.text, newField.text)
+                // Đợi signal passwordChanged hoặc passwordChangeFailed
             }
         }
 
@@ -71,7 +74,10 @@ Item {
     }
 
     Connections {
-        target: auth
+        target: root.auth
+        function onPasswordChanged() {
+            root.changeOk()
+        }
         function onPasswordChangeFailed(reason) {
             errorLabel.text = reason
         }
