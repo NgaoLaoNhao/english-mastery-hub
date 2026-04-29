@@ -18,16 +18,16 @@ Item {
 
         Label {
             // Hiện display name nếu có, fallback về username
-            text: authController.currentDisplayName.length > 0
-                  ? authController.currentDisplayName
-                  : authController.currentUsername
+            text: auth.currentDisplayName.length > 0
+                  ? auth.currentDisplayName
+                  : auth.currentUsername
             font.pixelSize: 28
             font.bold: true
             Layout.alignment: Qt.AlignHCenter
         }
 
         Label {
-            text: "Vai trò: " + (authController.currentRole === "admin"
+            text: "Vai trò: " + (auth.currentRole === "admin"
                                  ? "Quản trị viên 👑"
                                  : "Thành viên")
             color: "#666"
@@ -50,7 +50,7 @@ Item {
         Button {
             text: "Đăng xuất"
             Layout.fillWidth: true
-            onClicked: authController.logout()
+            onClicked: auth.logout()
         }
     }
 }

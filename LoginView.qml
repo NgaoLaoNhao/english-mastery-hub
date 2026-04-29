@@ -45,7 +45,7 @@ Item {
             Layout.fillWidth: true
             onClicked: {
                 errorLabel.text = ""
-                authController.login(usernameField.text, passwordField.text)
+                auth.login(usernameField.text, passwordField.text)
             }
         }
 
@@ -60,7 +60,7 @@ Item {
 
     // Lắng nghe signal loginFailed từ C++
     Connections {
-        target: authController
+        target: auth
         function onLoginFailed(reason) {
             errorLabel.text = reason
         }

@@ -57,7 +57,7 @@ Item {
                     errorLabel.text = "Mật khẩu xác nhận không khớp."
                     return
                 }
-                authController.changePassword(oldField.text, newField.text)
+                auth.changePassword(oldField.text, newField.text)
             }
         }
 
@@ -71,7 +71,7 @@ Item {
     }
 
     Connections {
-        target: authController
+        target: auth
         function onPasswordChangeFailed(reason) {
             errorLabel.text = reason
         }
