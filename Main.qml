@@ -37,7 +37,13 @@ ApplicationWindow {
         adminUser: mockAdminUser
         adminGroup: mockAdminGroup
     }
-
+    MockGroupDetailController {
+        id: mockGroupDetail
+        auth: mockAuth
+        adminUser: mockAdminUser
+        adminGroup: mockAdminGroup
+        checkin: mockCheckin
+    }
     // realAuthController được expose từ main.cpp qua setContextProperty
     // -> tham chiếu trực tiếp tên đó.
 
@@ -50,6 +56,7 @@ ApplicationWindow {
     readonly property var topController: useMocks ? mockTop : null    // ============================================================
     readonly property var resource: useMocks ? mockResource : null
     readonly property var personal: useMocks ? mockPersonal : null
+    readonly property var groupDetail: useMocks ? mockGroupDetail : null
     // Router — dùng StackView + Component
     // ============================================================
     StackView {
@@ -95,6 +102,10 @@ ApplicationWindow {
             }
             onOpenAdminPanel: stack.replace(adminPanelPage)    // <-- THÊM'
             onOpenPersonal: stack.replace(personalPage)
+            onOpenGroupDetail: function(gid) {
+                root.currentGroupDetailId = gid
+                stack.replace(groupDetailPage)
+            }
             resource: root.resource
         }
     }
@@ -116,6 +127,19 @@ ApplicationWindow {
             checkin: root.checkin
             adminUser: root.adminUser
             adminGroup: root.adminGroup
+            onBackRequested: stack.replace(welcomePage)
+        }
+    }
+    property int currentGroupDetailId: -1
+
+    Component {
+        id: groupDetailPage
+        GroupDetailView {
+            auth: root.auth
+            groupDetail: root.groupDetail
+            adminGroup: root.adminGroup
+            adminUser: root.adminUser
+            groupId: root.currentGroupDetailId
             onBackRequested: stack.replace(welcomePage)
         }
     }

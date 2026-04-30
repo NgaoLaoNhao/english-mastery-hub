@@ -4,6 +4,7 @@ import QtQuick.Layouts
 
 ColumnLayout {
     id: root
+    signal groupClicked(int groupId)
     property var topController: null
     Layout.fillWidth: true
     spacing: 8
@@ -50,10 +51,17 @@ ColumnLayout {
                 Repeater {
                     model: gridCol.groupList
                     delegate: Rectangle {
+                        id: card
+                        required property var modelData
+                        required property int index
+                        property bool _hovered: false
+
                         Layout.fillWidth: true
                         Layout.preferredHeight: 160
                         color: "white"
-                        border.color: "#d1d5db"; radius: 8
+                        border.color: card._hovered ? "#0891b2" : "#d1d5db"
+                        border.width: card._hovered ? 2 : 1
+                        radius: 8
                         clip: true
 
                         ColumnLayout {
@@ -66,24 +74,24 @@ ColumnLayout {
                                 Layout.preferredHeight: 56
                                 gradient: Gradient {
                                     orientation: Gradient.Horizontal
-                                    GradientStop { position: 0.0; color: root.cardPalette[index % root.cardPalette.length][0] }
-                                    GradientStop { position: 1.0; color: root.cardPalette[index % root.cardPalette.length][1] }
+                                    GradientStop { position: 0.0; color: root.cardPalette[card.index % root.cardPalette.length][0] }
+                                    GradientStop { position: 1.0; color: root.cardPalette[card.index % root.cardPalette.length][1] }
                                 }
                                 RowLayout {
                                     anchors.fill: parent; anchors.margins: 10; spacing: 10
                                     Label {
-                                        text: index === 0 ? "👑" : index === 1 ? "🥈" : index === 2 ? "🥉" : "🏅"
+                                        text: card.index === 0 ? "👑" : card.index === 1 ? "🥈" : card.index === 2 ? "🥉" : "🏅"
                                         font.pixelSize: 22
                                     }
                                     Label {
-                                        text: modelData.name
+                                        text: card.modelData.name
                                         color: "white"; font.pixelSize: 16; font.bold: true
                                         style: Text.Outline; styleColor: "#000"
                                         Layout.fillWidth: true
                                         elide: Text.ElideRight
                                     }
                                     Label {
-                                        text: "#" + (index + 1)
+                                        text: "#" + (card.index + 1)
                                         color: "white"; font.pixelSize: 12; font.bold: true
                                     }
                                 }
@@ -97,27 +105,49 @@ ColumnLayout {
                                 spacing: 6
 
                                 Label {
-                                    text: "👤 Trưởng nhóm: " + modelData.leaderName
+                                    text: "👤 Trưởng nhóm: " + card.modelData.leaderName
                                     font.pixelSize: 12
                                     elide: Text.ElideRight
                                     Layout.fillWidth: true
                                 }
                                 Label {
-                                    text: "👥 " + modelData.memberCount + " thành viên"
-                                        + "  ·  ✅ " + modelData.totalCheckins + " check-ins"
+                                    text: "👥 " + card.modelData.memberCount + " thành viên"
+                                          + "  ·  ✅ " + card.modelData.totalCheckins + " check-ins"
                                     font.pixelSize: 12; color: "#555"
                                 }
                                 RowLayout {
                                     Layout.fillWidth: true
                                     Label {
-                                        text: "⏱ Tổng: " + modelData.totalHours.toFixed(1) + "h"
+                                        text: "⏱ Tổng: " + card.modelData.totalHours.toFixed(1) + "h"
                                         font.pixelSize: 12; color: "#0891b2"
                                     }
                                     Item { Layout.fillWidth: true }
                                     Label {
-                                        text: "📊 TB: " + modelData.avgHours.toFixed(2) + "h/người"
+                                        text: "📊 TB: " + card.modelData.avgHours.toFixed(2) + "h/người"
                                         font.pixelSize: 13; font.bold: true; color: "#dc2626"
                                     }
+                                }
+                            }
+                        }
+
+                        // ===== MouseArea phủ toàn card → emit groupClicked =====
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            hoverEnabled: true
+                            onEntered: card._hovered = true
+                            onExited:  card._hovered = false
+                            onClicked: {
+                                console.log("Click card index=" + card.index
+                                            + " modelData=" + JSON.stringify(card.modelData))
+                                if (!card.modelData) return
+                                var gid = card.modelData.id !== undefined
+                                          ? card.modelData.id
+                                          : card.modelData.groupId
+                                if (gid !== undefined) {
+                                    root.groupClicked(gid)
+                                } else {
+                                    console.warn("⚠️ Group card không có field id/groupId!")
                                 }
                             }
                         }
