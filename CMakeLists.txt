@@ -43,6 +43,10 @@ qt_add_qml_module(appEnglishMasteryHub
         MockResourceController.qml
         ResourceLibrarySection.qml
         BackendAdminToolsSection.qml
+        MockPersonalController.qml
+        PersonalView.qml
+        PersonalStatsSection.qml
+        PersonalHistorySection.qml
     SOURCES
         core/databasemanager.h
         core/databasemanager.cpp
@@ -57,6 +61,10 @@ qt_add_qml_module(appEnglishMasteryHub
         QML_FILES MockResourceController.qml
         QML_FILES ResourceLibrarySection.qml
         QML_FILES BackendAdminToolsSection.qml
+        QML_FILES MockPersonalController.qml
+        QML_FILES PersonalView.qml
+        QML_FILES PersonalStatsSection.qml
+        QML_FILES PersonalHistorySection.qml
 )
 
 target_link_libraries(appEnglishMasteryHub

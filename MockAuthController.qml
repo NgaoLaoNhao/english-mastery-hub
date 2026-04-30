@@ -68,4 +68,18 @@ QtObject {
         passwordChanged()
         currentUserChanged()
     }
+    // Cho phép cập nhật fullName từ ngoài (sync với adminUser khi user sửa hồ sơ)
+    function updateUserFullName(userId, newFullName) {
+        var s = String(newFullName)
+        for (var key in _users) {
+            if (_users[key].id === userId) {
+                _users[key].fullName = s
+                if (currentUserId === userId) {
+                    currentDisplayName = s
+                    currentUserChanged()
+                }
+                return
+            }
+        }
+    }
 }
