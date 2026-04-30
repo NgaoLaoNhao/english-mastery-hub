@@ -13,7 +13,7 @@ Item {
     property var resource: null
     signal logoutRequested()
     signal openAdminPanel()
-
+    signal openPersonal()
     readonly property bool isAdmin: auth && auth.currentRole === "admin"
 
     ColumnLayout {
@@ -32,10 +32,36 @@ Item {
                     color: "white"; font.pixelSize: 16; font.bold: true
                 }
                 Item { Layout.fillWidth: true }
-                Label {
-                    text: auth ? ("👋 " + (auth.currentDisplayName || auth.currentUsername)) : ""
-                    color: "#ddd"; font.pixelSize: 13
+
+                // ===== CLICKABLE USERNAME (mở Trang cá nhân) =====
+                Rectangle {
+                    id: userChip
+                    Layout.preferredHeight: 36
+                    Layout.preferredWidth: nameLabel.implicitWidth + 20
+                    color: userMa.containsMouse ? "#33334d" : "transparent"
+                    radius: 6
+                    border.color: userMa.containsMouse ? "#4b5563" : "transparent"
+                    border.width: 1
+
+                    Label {
+                        id: nameLabel
+                        anchors.centerIn: parent
+                        text: auth ? ("👋 " + (auth.currentDisplayName || auth.currentUsername)) : ""
+                        color: "#ddd"; font.pixelSize: 13
+                    }
+
+                    MouseArea {
+                        id: userMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.openPersonal()
+                        ToolTip.text: "Mở trang cá nhân"
+                        ToolTip.visible: containsMouse
+                        ToolTip.delay: 500
+                    }
                 }
+
                 Button { text: "🛠 Quản trị"; visible: root.isAdmin; onClicked: root.openAdminPanel() }
                 Button { text: "🚪 Đăng xuất"; onClicked: root.logoutRequested() }
             }
@@ -59,9 +85,9 @@ Item {
                         anchors.left: parent.left; anchors.leftMargin: 14
                         anchors.verticalCenter: parent.verticalCenter
                         text: auth
-                            ? "Xin chào, " + (auth.currentDisplayName || auth.currentUsername)
-                              + "  ·  " + (auth.currentRole === "admin" ? "Quản trị" : "Thành viên")
-                            : ""
+                              ? "Xin chào, " + (auth.currentDisplayName || auth.currentUsername)
+                                + "  ·  " + (auth.currentRole === "admin" ? "Quản trị" : "Thành viên")
+                              : ""
                         font.pixelSize: 15
                     }
                 }
