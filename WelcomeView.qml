@@ -14,6 +14,7 @@ Item {
     signal logoutRequested()
     signal openAdminPanel()
     signal openPersonal()
+    signal openGroupDetail(int groupId)
     readonly property bool isAdmin: auth && auth.currentRole === "admin"
 
     ColumnLayout {
@@ -188,6 +189,7 @@ Item {
                     spacing: 0
                     GroupsBoardSection {
                         topController: root.topController
+                        onGroupClicked: function(gid) { root.openGroupDetail(gid) }
                     }
                 }
                 ResourceLibrarySection {

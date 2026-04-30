@@ -47,6 +47,10 @@ qt_add_qml_module(appEnglishMasteryHub
         PersonalView.qml
         PersonalStatsSection.qml
         PersonalHistorySection.qml
+        MockGroupDetailController.qml
+        GroupDetailView.qml
+        GroupMemberRankingSection.qml
+        GroupDailyChart.qml
     SOURCES
         core/databasemanager.h
         core/databasemanager.cpp
@@ -65,6 +69,10 @@ qt_add_qml_module(appEnglishMasteryHub
         QML_FILES PersonalView.qml
         QML_FILES PersonalStatsSection.qml
         QML_FILES PersonalHistorySection.qml
+        QML_FILES MockGroupDetailController.qml
+        QML_FILES GroupDetailView.qml
+        QML_FILES GroupMemberRankingSection.qml
+        QML_FILES GroupDailyChart.qml
 )
 
 target_link_libraries(appEnglishMasteryHub
