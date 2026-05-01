@@ -52,29 +52,14 @@ qt_add_qml_module(appEnglishMasteryHub
         GroupMemberRankingSection.qml
         GroupDailyChart.qml
         TopDetailView.qml
+        MockGeminiController.qml
     SOURCES
         core/databasemanager.h
         core/databasemanager.cpp
+        core/geminicontroller.h
+        core/geminicontroller.cpp
         controllers/authcontroller.h
         controllers/authcontroller.cpp
-        QML_FILES MockAppSettingsController.qml
-        QML_FILES ChallengeProgressSection.qml
-        QML_FILES CheckinHistorySection.qml
-        QML_FILES MockTopController.qml
-        QML_FILES TopBoardSection.qml
-        QML_FILES GroupsBoardSection.qml
-        QML_FILES MockResourceController.qml
-        QML_FILES ResourceLibrarySection.qml
-        QML_FILES BackendAdminToolsSection.qml
-        QML_FILES MockPersonalController.qml
-        QML_FILES PersonalView.qml
-        QML_FILES PersonalStatsSection.qml
-        QML_FILES PersonalHistorySection.qml
-        QML_FILES MockGroupDetailController.qml
-        QML_FILES GroupDetailView.qml
-        QML_FILES GroupMemberRankingSection.qml
-        QML_FILES GroupDailyChart.qml
-        QML_FILES TopDetailView.qml
 )
 
 target_link_libraries(appEnglishMasteryHub

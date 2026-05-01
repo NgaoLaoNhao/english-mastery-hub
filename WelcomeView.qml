@@ -11,6 +11,7 @@ Item {
     property var appSettings: null
     property var topController: null
     property var resource: null
+    property var gemini: null
     signal logoutRequested()
     signal openAdminPanel()
     signal openPersonal()
@@ -140,6 +141,7 @@ Item {
                         Layout.preferredWidth: 1
                         auth: root.auth
                         checkin: root.checkin
+                        gemini: root.gemini                      // ← Người C thêm
                     }
                 }
 
@@ -264,4 +266,42 @@ Item {
             if (appSettings) appSettings.updateAnnouncement(editAnnouncement.text)
         }
     }
+    // ===== AI Result Popup =====
+    Dialog {
+        id: aiResultDialog
+        modal: true
+        anchors.centerIn: Overlay.overlay
+        width: 500
+        title: "🤖 AI Assistant"
+        standardButtons: Dialog.Ok
+
+        ColumnLayout {
+            anchors.fill: parent; spacing: 10
+            BusyIndicator {
+                running: gemini && gemini.isLoading
+                Layout.alignment: Qt.AlignHCenter
+                visible: running
+            }
+            ScrollView {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 250
+                TextArea {
+                    text: gemini ? gemini.lastResponse : ""
+                    readOnly: true
+                    wrapMode: TextArea.Wrap
+                    font.pixelSize: 13
+                }
+            }
+        }
+    }
+
+    Connections {
+        target: gemini
+        function onResponseReceived(text) { aiResultDialog.open() }
+        function onErrorOccurred(error) {
+            aiResultDialog.title = "❌ Lỗi AI"
+            aiResultDialog.open()
+        }
+    }
+
 }

@@ -5,6 +5,7 @@
 #include <QDebug>
 
 #include "core/databasemanager.h"
+#include "core/geminicontroller.h"
 #include "controllers/authcontroller.h"
 
 int main(int argc, char *argv[])
@@ -27,11 +28,13 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    // ─── Tạo AuthController + expose ra QML ─────────────────────────
+    // ─── Tạo AuthController + GeminiController + expose ra QML ────
     AuthController authController;
+    GeminiController geminiController;
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("realAuthController", &authController);
+    engine.rootContext()->setContextProperty("realGeminiController", &geminiController);
 
     // ─── Bắt sự kiện engine load lỗi ────────────────────────────────
     QObject::connect(

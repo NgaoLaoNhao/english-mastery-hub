@@ -11,6 +11,7 @@ Item {
     property var checkin: null
     property var adminUser: null
     property var adminGroup: null
+    property var gemini: null
 
     signal backRequested()
 
@@ -174,6 +175,15 @@ Item {
                                     pwdConfirm.text = ""
                                     pwdError.text = ""
                                     changePwdDialog.open()
+                                }
+                            }
+                            Button {
+                                text: "📊 AI Phân Tích"
+                                onClicked: {
+                                    if (root.gemini && root.checkin && root.auth) {
+                                        var history = root.checkin.getMyHistory(root.auth.currentUserId)
+                                        root.gemini.analyzeProgress(JSON.stringify(history))
+                                    }
                                 }
                             }
                         }
@@ -438,6 +448,44 @@ Item {
             anchors.fill: parent
             text: "Đổi mật khẩu thành công!"
             wrapMode: Label.WordWrap
+        }
+    }
+
+    // ===== AI Result Popup (Người C) =====
+    Dialog {
+        id: aiResultDialog
+        modal: true
+        anchors.centerIn: Overlay.overlay
+        width: 500
+        title: "📊 AI Phân Tích Tiến Độ"
+        standardButtons: Dialog.Ok
+
+        ColumnLayout {
+            anchors.fill: parent; spacing: 10
+            BusyIndicator {
+                running: gemini && gemini.isLoading
+                Layout.alignment: Qt.AlignHCenter
+                visible: running
+            }
+            ScrollView {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 250
+                TextArea {
+                    text: gemini ? gemini.lastResponse : ""
+                    readOnly: true
+                    wrapMode: TextArea.Wrap
+                    font.pixelSize: 13
+                }
+            }
+        }
+    }
+
+    Connections {
+        target: gemini
+        function onResponseReceived(text) { aiResultDialog.open() }
+        function onErrorOccurred(error) {
+            aiResultDialog.title = "❌ Lỗi AI"
+            aiResultDialog.open()
         }
     }
 }

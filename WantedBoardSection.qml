@@ -6,6 +6,7 @@ ColumnLayout {
     id: root
     property var auth: null
     property var checkin: null
+    property var gemini: null
     Layout.fillWidth: true
     spacing: 6
 
@@ -65,6 +66,15 @@ ColumnLayout {
                             Label { text: "@" + modelData.username; color: "#888"; font.pixelSize: 11 }
                         }
                         Label { text: "⏳"; font.pixelSize: 20 }
+                        Button {
+                            text: "🤖 Nhắc"
+                            font.pixelSize: 11
+                            onClicked: {
+                                if (root.gemini) {
+                                    root.gemini.generateWarning(modelData.fullName || modelData.username, 1)
+                                }
+                            }
+                        }
                     }
                 }
             }

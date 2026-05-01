@@ -12,7 +12,7 @@ ApplicationWindow {
     // ============================================================
     // FLAG SWITCH MOCK/REAL — đổi 1 dòng để chuyển toàn app
     // ============================================================
-    readonly property bool useMocks: true
+    readonly property bool useMocks: false
 
     // Mock instance (luôn được tạo, chỉ dùng nếu useMocks=true)
     MockAuthController { id: mockAuth }
@@ -44,6 +44,7 @@ ApplicationWindow {
         adminGroup: mockAdminGroup
         checkin: mockCheckin
     }
+    MockGeminiController { id: mockGemini }                       // ← Người C thêm
     // realAuthController được expose từ main.cpp qua setContextProperty
     // -> tham chiếu trực tiếp tên đó.
 
@@ -57,6 +58,7 @@ ApplicationWindow {
     readonly property var resource: useMocks ? mockResource : null
     readonly property var personal: useMocks ? mockPersonal : null
     readonly property var groupDetail: useMocks ? mockGroupDetail : null
+    readonly property var gemini: useMocks ? mockGemini : realGeminiController
     // Router — dùng StackView + Component
     // ============================================================
     StackView {
@@ -111,6 +113,7 @@ ApplicationWindow {
                 stack.replace(topDetailPage)
             }
             resource: root.resource
+            gemini: root.gemini                                  // ← Người C thêm
         }
     }
 
@@ -131,6 +134,7 @@ ApplicationWindow {
             checkin: root.checkin
             adminUser: root.adminUser
             adminGroup: root.adminGroup
+            gemini: root.gemini                              // ← Người C thêm
             onBackRequested: stack.replace(welcomePage)
         }
     }
