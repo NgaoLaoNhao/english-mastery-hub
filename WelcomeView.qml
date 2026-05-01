@@ -15,6 +15,7 @@ Item {
     signal openAdminPanel()
     signal openPersonal()
     signal openGroupDetail(int groupId)
+    signal openTopDetail(int userId)
     readonly property bool isAdmin: auth && auth.currentRole === "admin"
 
     ColumnLayout {
@@ -179,6 +180,7 @@ Item {
                     spacing: 0
                     TopBoardSection {
                         topController: root.topController
+                        onUserClicked: function(uid) { root.openTopDetail(uid) }
                     }
                 }
 

@@ -51,6 +51,7 @@ qt_add_qml_module(appEnglishMasteryHub
         GroupDetailView.qml
         GroupMemberRankingSection.qml
         GroupDailyChart.qml
+        TopDetailView.qml
     SOURCES
         core/databasemanager.h
         core/databasemanager.cpp
@@ -73,6 +74,7 @@ qt_add_qml_module(appEnglishMasteryHub
         QML_FILES GroupDetailView.qml
         QML_FILES GroupMemberRankingSection.qml
         QML_FILES GroupDailyChart.qml
+        QML_FILES TopDetailView.qml
 )
 
 target_link_libraries(appEnglishMasteryHub
