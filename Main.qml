@@ -106,6 +106,10 @@ ApplicationWindow {
                 root.currentGroupDetailId = gid
                 stack.replace(groupDetailPage)
             }
+            onOpenTopDetail: function(uid) {
+                root.currentTopDetailUserId = uid
+                stack.replace(topDetailPage)
+            }
             resource: root.resource
         }
     }
@@ -141,6 +145,23 @@ ApplicationWindow {
             adminUser: root.adminUser
             groupId: root.currentGroupDetailId
             onBackRequested: stack.replace(welcomePage)
+        }
+    }
+    property int currentTopDetailUserId: -1
+
+    Component {
+        id: topDetailPage
+        TopDetailView {
+            auth: root.auth
+            personal: root.personal
+            adminUser: root.adminUser
+            adminGroup: root.adminGroup
+            userId: root.currentTopDetailUserId
+            onBackRequested: stack.replace(welcomePage)
+            onOpenGroupDetail: function(gid) {
+                root.currentGroupDetailId = gid
+                stack.replace(groupDetailPage)
+            }
         }
     }
 
