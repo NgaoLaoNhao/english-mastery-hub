@@ -12,7 +12,7 @@ Item {
     property var adminUser: null
     property var adminGroup: null
     property var gemini: null
-
+    property var pdfExporter: null
     signal backRequested()
 
     readonly property int myUserId: auth ? auth.currentUserId : -1
@@ -87,7 +87,7 @@ Item {
                 // ===== Banner profile =====
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 130
+                    Layout.preferredHeight: 200
                     Layout.topMargin: 16
                     Layout.leftMargin: 20
                     Layout.rightMargin: 20
@@ -183,6 +183,16 @@ Item {
                                     if (root.gemini && root.checkin && root.auth) {
                                         var history = root.checkin.getMyHistory(root.auth.currentUserId)
                                         root.gemini.analyzeProgress(JSON.stringify(history))
+                                    }
+                                }
+                            }
+                            Button {
+                                text: "📄 Xuất PDF"
+                                enabled: !!root.pdfExporter && !!root.checkin && root.myUserId > 0
+                                onClicked: {
+                                    if (root.pdfExporter && root.myUserId > 0) {
+                                        pdfPreviewDialog.report = root.pdfExporter.buildPersonalReport(root.myUserId)
+                                        pdfPreviewDialog.open()
                                     }
                                 }
                             }
@@ -487,5 +497,9 @@ Item {
             aiResultDialog.title = "❌ Lỗi AI"
             aiResultDialog.open()
         }
+    }
+    PdfPreviewDialog {
+        id: pdfPreviewDialog
+        pdfExporter: root.pdfExporter
     }
 }

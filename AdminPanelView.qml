@@ -7,6 +7,7 @@ Item {
     property var auth: null
     property var adminUser: null
     property var adminGroup: null
+    property var pdfExporter: null              // ← MỚI
     signal backToWelcome()
 
     ColumnLayout {
@@ -22,6 +23,16 @@ Item {
                 font.pixelSize: 22
                 font.bold: true
                 Layout.fillWidth: true
+            }
+            Button {
+                text: "📄 Xuất Top Board"
+                enabled: !!root.pdfExporter
+                onClicked: {
+                    if (root.pdfExporter) {
+                        pdfPreviewTopBoardDialog.report = root.pdfExporter.buildTopBoardReport()
+                        pdfPreviewTopBoardDialog.open()
+                    }
+                }
             }
             Button {
                 text: "← Trở về"
@@ -51,5 +62,11 @@ Item {
                 adminGroup: root.adminGroup
             }
         }
+    }
+
+    // ===== F.3 Dialog =====
+    PdfPreviewTopBoardDialog {
+        id: pdfPreviewTopBoardDialog
+        pdfExporter: root.pdfExporter
     }
 }

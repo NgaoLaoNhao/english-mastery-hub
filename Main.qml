@@ -9,19 +9,18 @@ ApplicationWindow {
     visible: true
     title: qsTr("English Mastery Hub")
 
-    // ============================================================
-    // FLAG SWITCH MOCK/REAL — đổi 1 dòng để chuyển toàn app
-    // ============================================================
-    readonly property bool useMocks: false
+    readonly property bool useMocks: true
 
-    // Mock instance (luôn được tạo, chỉ dùng nếu useMocks=true)
-    MockAuthController { id: mockAuth }
-    MockAdminUserController { id: mockAdminUser }
+    // ============================================================
+    // Mock instances
+    // ============================================================
+    MockAuthController        { id: mockAuth }
+    MockAdminUserController   { id: mockAdminUser }
     MockAppSettingsController { id: mockAppSettings }
-    MockAdminGroupController { id: mockAdminGroup }
+    MockAdminGroupController  { id: mockAdminGroup }
     MockCheckinController {
         id: mockCheckin
-        adminUserRef: mockAdminUser    // pass reference để biết user list
+        adminUserRef: mockAdminUser
     }
     MockTopController {
         id: mockTop
@@ -44,22 +43,139 @@ ApplicationWindow {
         adminGroup: mockAdminGroup
         checkin: mockCheckin
     }
-    MockGeminiController { id: mockGemini }                       // ← Người C thêm
-    // realAuthController được expose từ main.cpp qua setContextProperty
-    // -> tham chiếu trực tiếp tên đó.
+    MockGeminiController         { id: mockGemini }
+    MockNotificationController   { id: mockNotification }
+    MockPdfExporter {
+        id: mockPdfExporter
+        checkin: mockCheckin
+        auth: mockAuth
+        adminUser: mockAdminUser
+        adminGroup: mockAdminGroup
+        personal: mockPersonal
+        groupDetail: mockGroupDetail
+    }
+    // ============================================================
+    // Property aliases
+    // ============================================================
+    readonly property var auth:           useMocks ? mockAuth          : realAuthController
+    readonly property var adminUser:      useMocks ? mockAdminUser     : null
+    readonly property var adminGroup:     useMocks ? mockAdminGroup    : null
+    readonly property var checkin:        useMocks ? mockCheckin       : null
+    readonly property var appSettings:    useMocks ? mockAppSettings   : null
+    readonly property var topController:  useMocks ? mockTop           : null
+    readonly property var resource:       useMocks ? mockResource      : null
+    readonly property var personal:       useMocks ? mockPersonal      : null
+    readonly property var groupDetail:    useMocks ? mockGroupDetail   : null
+    readonly property var gemini:         useMocks ? mockGemini        : realGeminiController
+    readonly property var notification:   useMocks ? mockNotification  : null
+    readonly property var pdfExporter: useMocks ? mockPdfExporter : null
+    // ============================================================
+    // State điều hướng
+    // ============================================================
+    property int currentGroupDetailId: -1
+    property int currentTopDetailUserId: -1
+    property int currentResourceDetailId: -1
 
-    readonly property var auth: useMocks ? mockAuth : realAuthController
-    // Admin user controller (TODO: realAdminUserController sẽ có ở DB track)
-    readonly property var adminUser: useMocks ? mockAdminUser : null
-    readonly property var adminGroup: useMocks ? mockAdminGroup : null
-    readonly property var checkin: useMocks ? mockCheckin : null
-    readonly property var appSettings: useMocks ? mockAppSettings : null
-    readonly property var topController: useMocks ? mockTop : null    // ============================================================
-    readonly property var resource: useMocks ? mockResource : null
-    readonly property var personal: useMocks ? mockPersonal : null
-    readonly property var groupDetail: useMocks ? mockGroupDetail : null
-    readonly property var gemini: useMocks ? mockGemini : realGeminiController
-    // Router — dùng StackView + Component
+    // ============================================================
+    // Helpers (notif routing + user lookup)
+    // ============================================================
+    function _routeNotifLink(link, refId) {
+        if (!link) return
+        var parts = link.split(":")
+        if (parts.length < 2) return
+        var kind = parts[0]
+        var id = parseInt(parts[1])
+        if (isNaN(id)) return
+        if (kind === "resource") {
+            root.currentResourceDetailId = id
+            stack.replace(resourceDetailPage)
+        } else if (kind === "group") {
+            root.currentGroupDetailId = id
+            stack.replace(groupDetailPage)
+        }
+    }
+
+    function _userIdFromUsername(uname) {
+        if (!adminUser || !uname) return -1
+        var us = adminUser.users || []
+        for (var i = 0; i < us.length; i++)
+            if (us[i].username === uname) return us[i].id
+        return -1
+    }
+
+    function _userDisplayById(uid) {
+        if (!adminUser || uid < 0) return "ai đó"
+        var us = adminUser.users || []
+        for (var i = 0; i < us.length; i++)
+            if (us[i].id === uid)
+                return us[i].fullName || ("@" + us[i].username)
+        return "ai đó"
+    }
+
+    // ============================================================
+    // M8 E.5: Wire resource events → tự sinh notif
+    // ============================================================
+    Connections {
+        target: root.resource
+        enabled: !!root.resource && !!root.notification
+
+        // Comment mới → notify uploader
+        function onCommentAdded(commentId, resourceId) {
+            var res = root.resource.getResourceById(resourceId)
+            if (!res) return
+
+            var uploaderId = root._userIdFromUsername(res.uploadedBy)
+            if (uploaderId <= 0) return
+
+            // Tìm comment vừa thêm để lấy userId người comment
+            var allCmts = root.resource.getComments(resourceId)
+            var commenterId = -1
+            for (var i = 0; i < allCmts.length; i++) {
+                if (allCmts[i].id === commentId) {
+                    commenterId = allCmts[i].userId
+                    break
+                }
+            }
+            // Skip self-notify
+            if (commenterId === uploaderId) return
+
+            var commenterName = root._userDisplayById(commenterId)
+            root.notification.addNotif(
+                uploaderId,
+                "comment",
+                "💬 Bình luận mới",
+                commenterName + " đã bình luận tài liệu \"" + res.title + "\"",
+                "resource:" + resourceId,
+                resourceId
+            )
+        }
+
+        // Like → notify uploader (chỉ khi liked=true)
+        function onLikeToggled(resourceId, userId, liked) {
+            if (!liked) return  // chỉ notify khi like, bỏ qua unlike
+
+            var res = root.resource.getResourceById(resourceId)
+            if (!res) return
+
+            var uploaderId = root._userIdFromUsername(res.uploadedBy)
+            if (uploaderId <= 0) return
+            // Skip self-notify
+            if (userId === uploaderId) return
+
+            var likerName = root._userDisplayById(userId)
+            root.notification.addNotif(
+                uploaderId,
+                "like",
+                "❤️ Có lượt thích mới",
+                likerName + " đã thích tài liệu \"" + res.title + "\"",
+                "resource:" + resourceId,
+                resourceId
+            )
+        }
+    }
+
+    // ============================================================
+    // Router
     // ============================================================
     StackView {
         id: stack
@@ -67,16 +183,50 @@ ApplicationWindow {
         initialItem: loginPage
     }
 
+    // ===== M8 E.2: Phím tắt test toast =====
+    Shortcut {
+        sequence: "Ctrl+T"
+        onActivated: {
+            var uid = -1
+            if (root.adminUser && root.auth) {
+                var us = root.adminUser.users || []
+                for (var i = 0; i < us.length; i++)
+                    if (us[i].username === root.auth.currentUsername) {
+                        uid = us[i].id; break
+                    }
+            }
+            if (uid <= 0) { console.log("Chưa login"); return }
+
+            root.notification.addNotif(
+                uid,
+                "comment",
+                "💬 Test toast",
+                "Đây là thông báo test bấm Ctrl+T",
+                "resource:1",
+                1
+            )
+        }
+    }
+
+    // ===== M8 E.2: Toast overlay =====
+    NotificationToastHost {
+        anchors.fill: parent
+        auth: root.auth
+        notification: root.notification
+        adminUser: root.adminUser
+        onToastClicked: function(link, refId) { root._routeNotifLink(link, refId) }
+    }
+
+    // ============================================================
+    // Pages
+    // ============================================================
     Component {
         id: loginPage
         LoginView {
             auth: root.auth
             onLoginOk: {
-                if (root.auth.mustChangePassword) {
-                    stack.replace(changePassPage)
-                } else {
-                    stack.replace(welcomePage)
-                }
+                if (root.auth.mustChangePassword) stack.replace(changePassPage)
+                else stack.replace(welcomePage)
             }
         }
     }
@@ -93,16 +243,17 @@ ApplicationWindow {
         id: welcomePage
         WelcomeView {
             auth: root.auth
-            checkin: root.checkin            // <-- THÊM
-            adminUser: root.adminUser        // <-- THÊM
-            adminGroup: root.adminGroup      // <-- THÊM
+            checkin: root.checkin
+            adminUser: root.adminUser
+            adminGroup: root.adminGroup
             appSettings: root.appSettings
             topController: root.topController
-            onLogoutRequested: {
-                root.auth.logout()
-                stack.replace(loginPage)
-            }
-            onOpenAdminPanel: stack.replace(adminPanelPage)    // <-- THÊM'
+            resource: root.resource
+            gemini: root.gemini
+            notification: root.notification
+
+            onLogoutRequested: { root.auth.logout(); stack.replace(loginPage) }
+            onOpenAdminPanel: stack.replace(adminPanelPage)
             onOpenPersonal: stack.replace(personalPage)
             onOpenGroupDetail: function(gid) {
                 root.currentGroupDetailId = gid
@@ -112,20 +263,25 @@ ApplicationWindow {
                 root.currentTopDetailUserId = uid
                 stack.replace(topDetailPage)
             }
-            resource: root.resource
-            gemini: root.gemini                                  // ← Người C thêm
+            onOpenResourceDetail: function(rid) {
+                root.currentResourceDetailId = rid
+                stack.replace(resourceDetailPage)
+            }
+            onNotifNavigateRequested: function(link, refId) { root._routeNotifLink(link, refId) }
         }
     }
 
-    Component {                                                // <-- THÊM CẢ COMPONENT MỚI
+    Component {
         id: adminPanelPage
         AdminPanelView {
             auth: root.auth
             adminUser: root.adminUser
             adminGroup: root.adminGroup
+            pdfExporter: root.pdfExporter
             onBackToWelcome: stack.replace(welcomePage)
         }
     }
+
     Component {
         id: personalPage
         PersonalView {
@@ -134,11 +290,11 @@ ApplicationWindow {
             checkin: root.checkin
             adminUser: root.adminUser
             adminGroup: root.adminGroup
-            gemini: root.gemini                              // ← Người C thêm
+            gemini: root.gemini
+            pdfExporter: root.pdfExporter
             onBackRequested: stack.replace(welcomePage)
         }
     }
-    property int currentGroupDetailId: -1
 
     Component {
         id: groupDetailPage
@@ -148,10 +304,10 @@ ApplicationWindow {
             adminGroup: root.adminGroup
             adminUser: root.adminUser
             groupId: root.currentGroupDetailId
+            pdfExporter: root.pdfExporter
             onBackRequested: stack.replace(welcomePage)
         }
     }
-    property int currentTopDetailUserId: -1
 
     Component {
         id: topDetailPage
@@ -169,4 +325,15 @@ ApplicationWindow {
         }
     }
 
+    Component {
+        id: resourceDetailPage
+        ResourceDetailView {
+            auth: root.auth
+            resource: root.resource
+            adminUser: root.adminUser
+            adminGroup: root.adminGroup
+            resourceId: root.currentResourceDetailId
+            onBackRequested: stack.replace(welcomePage)
+        }
+    }
 }

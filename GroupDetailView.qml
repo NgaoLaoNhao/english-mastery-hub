@@ -10,7 +10,7 @@ Item {
     property var adminGroup: null
     property var adminUser: null
     property int groupId: -1
-
+    property var pdfExporter: null
     signal backRequested()
 
     readonly property var info: groupDetail && groupId > 0
@@ -18,7 +18,15 @@ Item {
 
     readonly property var kpi: groupDetail && groupId > 0
                                ? groupDetail.getGroupKpi(groupId) : null
-
+    readonly property bool canExportPdf: {
+        if (!auth) return false
+        if (auth.currentRole === "admin") return true
+        if (adminGroup && groupId > 0) {
+            var g = adminGroup.getGroup(groupId)
+            if (g && g.leaderUserId === auth.currentUserId) return true
+        }
+        return false
+    }
     ColumnLayout {
         anchors.fill: parent
         spacing: 0
@@ -43,6 +51,17 @@ Item {
                     text: "👥 Chi tiết nhóm"
                     color: "white"; font.pixelSize: 16; font.bold: true
                     Layout.leftMargin: 12
+                }
+
+                Button {
+                    text: "📄 Xuất PDF"
+                    visible: root.canExportPdf && !!root.info && !!root.pdfExporter
+                    onClicked: {
+                        if (root.pdfExporter && root.groupId > 0) {
+                            pdfPreviewGroupDialog.report = root.pdfExporter.buildGroupReport(root.groupId)
+                            pdfPreviewGroupDialog.open()
+                        }
+                    }
                 }
 
                 Item { Layout.fillWidth: true }
@@ -268,7 +287,13 @@ Item {
                     groupId: root.groupId
                 }
 
+                PdfPreviewGroupDialog {
+                    id: pdfPreviewGroupDialog
+                    pdfExporter: root.pdfExporter
+                }
+
                 Item { Layout.preferredHeight: 24 }
+
             }
         }
     }
