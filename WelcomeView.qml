@@ -12,12 +12,26 @@ Item {
     property var topController: null
     property var resource: null
     property var gemini: null
+    property var notification: null
+
     signal logoutRequested()
     signal openAdminPanel()
     signal openPersonal()
     signal openGroupDetail(int groupId)
     signal openTopDetail(int userId)
+    signal openResourceDetail(int resourceId)
+    signal notifNavigateRequested(string link, int refId)
+
     readonly property bool isAdmin: auth && auth.currentRole === "admin"
+
+    // currentUserId tính 1 lần dùng chung cho NotificationBell
+    readonly property int currentUserId: {
+        if (!adminUser || !auth) return -1
+        var us = adminUser.users || []
+        for (var i = 0; i < us.length; i++)
+            if (us[i].username === auth.currentUsername) return us[i].id
+        return -1
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -27,16 +41,25 @@ Item {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 56
-            color: "#1f1f2e"; z: 10
+            color: "#1f1f2e"
+            z: 10
+
             RowLayout {
-                anchors.fill: parent; anchors.leftMargin: 20; anchors.rightMargin: 20; spacing: 12
+                anchors.fill: parent
+                anchors.leftMargin: 20
+                anchors.rightMargin: 20
+                spacing: 12
+
                 Label {
                     text: "📚 English Mastery Hub"
-                    color: "white"; font.pixelSize: 16; font.bold: true
+                    color: "white"
+                    font.pixelSize: 16
+                    font.bold: true
                 }
+
                 Item { Layout.fillWidth: true }
 
-                // ===== CLICKABLE USERNAME (mở Trang cá nhân) =====
+                // ===== Username chip → mở Trang cá nhân =====
                 Rectangle {
                     id: userChip
                     Layout.preferredHeight: 36
@@ -50,7 +73,8 @@ Item {
                         id: nameLabel
                         anchors.centerIn: parent
                         text: auth ? ("👋 " + (auth.currentDisplayName || auth.currentUsername)) : ""
-                        color: "#ddd"; font.pixelSize: 13
+                        color: "#ddd"
+                        font.pixelSize: 13
                     }
 
                     MouseArea {
@@ -65,15 +89,35 @@ Item {
                     }
                 }
 
-                Button { text: "🛠 Quản trị"; visible: root.isAdmin; onClicked: root.openAdminPanel() }
-                Button { text: "🚪 Đăng xuất"; onClicked: root.logoutRequested() }
+                // ===== M8 E.3: Chuông thông báo =====
+                NotificationBell {
+                    notification: root.notification
+                    auth: root.auth
+                    adminUser: root.adminUser
+                    currentUserId: root.currentUserId
+                    onNavigateRequested: function(link, refId) {
+                        root.notifNavigateRequested(link, refId)
+                    }
+                }
+
+                Button {
+                    text: "🛠 Quản trị"
+                    visible: root.isAdmin
+                    onClicked: root.openAdminPanel()
+                }
+                Button {
+                    text: "🚪 Đăng xuất"
+                    onClicked: root.logoutRequested()
+                }
             }
         }
 
         // ===== SCROLLABLE =====
         ScrollView {
-            Layout.fillWidth: true; Layout.fillHeight: true
-            contentWidth: availableWidth; clip: true
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            contentWidth: availableWidth
+            clip: true
 
             ColumnLayout {
                 width: parent.width
@@ -81,11 +125,17 @@ Item {
 
                 // Greeting strip
                 Rectangle {
-                    Layout.fillWidth: true; Layout.preferredHeight: 50
-                    Layout.topMargin: 16; Layout.leftMargin: 20; Layout.rightMargin: 20
-                    color: "#eef6ff"; radius: 8; border.color: "#cfe0f4"
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 50
+                    Layout.topMargin: 16
+                    Layout.leftMargin: 20
+                    Layout.rightMargin: 20
+                    color: "#eef6ff"
+                    radius: 8
+                    border.color: "#cfe0f4"
                     Label {
-                        anchors.left: parent.left; anchors.leftMargin: 14
+                        anchors.left: parent.left
+                        anchors.leftMargin: 14
                         anchors.verticalCenter: parent.verticalCenter
                         text: auth
                               ? "Xin chào, " + (auth.currentDisplayName || auth.currentUsername)
@@ -97,13 +147,15 @@ Item {
 
                 // ===== Callout: Tài liệu =====
                 EditableCallout {
-                    Layout.leftMargin: 20; Layout.rightMargin: 20
+                    Layout.leftMargin: 20
+                    Layout.rightMargin: 20
                     emoji: "📚"
                     title: "TOÀN BỘ TÀI LIỆU QUAN TRỌNG"
                     body: appSettings ? appSettings.importantDocsLabel : ""
                     linkUrl: appSettings ? appSettings.importantDocsUrl : ""
                     canEdit: root.isAdmin
-                    bgColor: "#fff7e6"; borderColor: "#daa520"
+                    bgColor: "#fff7e6"
+                    borderColor: "#daa520"
                     onEditClicked: {
                         editDocsLabel.text = appSettings ? appSettings.importantDocsLabel : ""
                         editDocsUrl.text   = appSettings ? appSettings.importantDocsUrl : ""
@@ -113,12 +165,14 @@ Item {
 
                 // ===== Callout: Thông báo =====
                 EditableCallout {
-                    Layout.leftMargin: 20; Layout.rightMargin: 20
+                    Layout.leftMargin: 20
+                    Layout.rightMargin: 20
                     emoji: "📢"
                     title: "THÔNG BÁO QUAN TRỌNG"
                     body: appSettings ? appSettings.announcement : ""
                     canEdit: root.isAdmin
-                    bgColor: "#fff0f0"; borderColor: "#e74c3c"
+                    bgColor: "#fff0f0"
+                    borderColor: "#e74c3c"
                     onEditClicked: {
                         editAnnouncement.text = appSettings ? appSettings.announcement : ""
                         editAnnouncementDialog.open()
@@ -128,7 +182,8 @@ Item {
                 // ===== 2-COLUMN: Check-in | Wanted =====
                 RowLayout {
                     Layout.fillWidth: true
-                    Layout.leftMargin: 20; Layout.rightMargin: 20
+                    Layout.leftMargin: 20
+                    Layout.rightMargin: 20
                     spacing: 14
                     CheckinSection {
                         Layout.fillWidth: true
@@ -141,23 +196,22 @@ Item {
                         Layout.preferredWidth: 1
                         auth: root.auth
                         checkin: root.checkin
-                        gemini: root.gemini                      // ← Người C thêm
+                        gemini: root.gemini
                     }
                 }
 
-                // ===== Đã check-in hôm nay =====
                 ColumnLayout {
                     Layout.fillWidth: true
-                    Layout.leftMargin: 20; Layout.rightMargin: 20
+                    Layout.leftMargin: 20
+                    Layout.rightMargin: 20
                     spacing: 0
-                    CheckedInTodaySection {
-                        checkin: root.checkin
-                    }
+                    CheckedInTodaySection { checkin: root.checkin }
                 }
-                // ===== Phase A2: Challenge Progress =====
+
                 ColumnLayout {
                     Layout.fillWidth: true
-                    Layout.leftMargin: 20; Layout.rightMargin: 20
+                    Layout.leftMargin: 20
+                    Layout.rightMargin: 20
                     spacing: 0
                     ChallengeProgressSection {
                         auth: root.auth
@@ -165,20 +219,21 @@ Item {
                     }
                 }
 
-                // ===== Phase A2: Lịch sử cá nhân =====
                 ColumnLayout {
                     Layout.fillWidth: true
-                    Layout.leftMargin: 20; Layout.rightMargin: 20
+                    Layout.leftMargin: 20
+                    Layout.rightMargin: 20
                     spacing: 0
                     CheckinHistorySection {
                         auth: root.auth
                         checkin: root.checkin
                     }
                 }
-                // ===== Phase A3: Top Board =====
+
                 ColumnLayout {
                     Layout.fillWidth: true
-                    Layout.leftMargin: 20; Layout.rightMargin: 20
+                    Layout.leftMargin: 20
+                    Layout.rightMargin: 20
                     spacing: 0
                     TopBoardSection {
                         topController: root.topController
@@ -186,28 +241,37 @@ Item {
                     }
                 }
 
-                // ===== Phase A3: Groups =====
                 ColumnLayout {
                     Layout.fillWidth: true
-                    Layout.leftMargin: 20; Layout.rightMargin: 20
+                    Layout.leftMargin: 20
+                    Layout.rightMargin: 20
                     spacing: 0
                     GroupsBoardSection {
                         topController: root.topController
                         onGroupClicked: function(gid) { root.openGroupDetail(gid) }
                     }
                 }
-                ResourceLibrarySection {
-                    Layout.fillWidth: true
-                    resource: root.resource
-                    auth: root.auth
-                    adminUser: root.adminUser
-                    adminGroup: root.adminGroup
-                }
-                // Future placeholder
-                // ===== Phase A5: Backend Admin Tools =====
+
                 ColumnLayout {
                     Layout.fillWidth: true
-                    Layout.leftMargin: 20; Layout.rightMargin: 20; Layout.bottomMargin: 24
+                    Layout.leftMargin: 20
+                    Layout.rightMargin: 20
+                    spacing: 0
+                    ResourceLibrarySection {
+                        Layout.fillWidth: true
+                        resource: root.resource
+                        auth: root.auth
+                        adminUser: root.adminUser
+                        adminGroup: root.adminGroup
+                        onResourceClicked: function(rid) { root.openResourceDetail(rid) }
+                    }
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.leftMargin: 20
+                    Layout.rightMargin: 20
+                    Layout.bottomMargin: 24
                     spacing: 0
                     BackendAdminToolsSection {
                         auth: root.auth
@@ -232,7 +296,8 @@ Item {
         standardButtons: Dialog.Save | Dialog.Cancel
 
         ColumnLayout {
-            anchors.fill: parent; spacing: 10
+            anchors.fill: parent
+            spacing: 10
             Label { text: "Mô tả/Tiêu đề:" }
             TextField { id: editDocsLabel; Layout.fillWidth: true }
             Label { text: "URL/Link:" }
@@ -253,7 +318,8 @@ Item {
         standardButtons: Dialog.Save | Dialog.Cancel
 
         ColumnLayout {
-            anchors.fill: parent; spacing: 10
+            anchors.fill: parent
+            spacing: 10
             Label { text: "Nội dung thông báo:" }
             TextArea {
                 id: editAnnouncement
@@ -266,6 +332,7 @@ Item {
             if (appSettings) appSettings.updateAnnouncement(editAnnouncement.text)
         }
     }
+
     // ===== AI Result Popup =====
     Dialog {
         id: aiResultDialog
@@ -276,7 +343,8 @@ Item {
         standardButtons: Dialog.Ok
 
         ColumnLayout {
-            anchors.fill: parent; spacing: 10
+            anchors.fill: parent
+            spacing: 10
             BusyIndicator {
                 running: gemini && gemini.isLoading
                 Layout.alignment: Qt.AlignHCenter
@@ -303,5 +371,4 @@ Item {
             aiResultDialog.open()
         }
     }
-
 }
