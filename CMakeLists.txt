@@ -23,33 +23,40 @@ qt_add_qml_module(appEnglishMasteryHub
         WelcomeView.qml
         MockAuthController.qml
         MockAdminUserController.qml
-        MockAdminGroupController.qml      # <-- THÊM
+        MockAdminGroupController.qml
+        MockCheckinController.qml
+        MockAppSettingsController.qml
         AdminPanelView.qml
-        UserManagementPage.qml            # <-- THÊM
+        UserManagementPage.qml
         GroupManagementPage.qml
-        AvatarUploader.qml# <-- THÊM        # <-- THÊM
+        AvatarUploader.qml
+        BannerHero.qml
+        EditableCallout.qml
+        CheckinSection.qml
+        WantedBoardSection.qml
+        CheckedInTodaySection.qml
+        ChallengeProgressSection.qml
+        CheckinHistorySection.qml
+        MockTopController.qml
+        TopBoardSection.qml
+        GroupsBoardSection.qml
+        MockResourceController.qml
+        ResourceLibrarySection.qml
+        BackendAdminToolsSection.qml
     SOURCES
         core/databasemanager.h
         core/databasemanager.cpp
         controllers/authcontroller.h
         controllers/authcontroller.cpp
-        QML_FILES MockAdminUserController.qml
-        QML_FILES AdminPanelView.qml
-        QML_FILES MockAdminGroupController.qml
-        QML_FILES UserManagementPage.qml
-        QML_FILES GroupManagementPage.qml
-        QML_FILES AvatarUploader.qml
-)
-
-# Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
-# If you are developing for iOS or macOS you should consider setting an
-# explicit, fixed bundle identifier manually though.
-set_target_properties(appEnglishMasteryHub PROPERTIES
-#    MACOSX_BUNDLE_GUI_IDENTIFIER com.example.appEnglishMasteryHub
-    MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
-    MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
-    MACOSX_BUNDLE TRUE
-    WIN32_EXECUTABLE TRUE
+        QML_FILES MockAppSettingsController.qml
+        QML_FILES ChallengeProgressSection.qml
+        QML_FILES CheckinHistorySection.qml
+        QML_FILES MockTopController.qml
+        QML_FILES TopBoardSection.qml
+        QML_FILES GroupsBoardSection.qml
+        QML_FILES MockResourceController.qml
+        QML_FILES ResourceLibrarySection.qml
+        QML_FILES BackendAdminToolsSection.qml
 )
 
 target_link_libraries(appEnglishMasteryHub
@@ -59,8 +66,9 @@ target_link_libraries(appEnglishMasteryHub
         Qt6::Sql
 )
 
+include(GNUInstallDirs)
 install(TARGETS appEnglishMasteryHub
-    BUNDLE DESTINATION .
+    BUNDLE  DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
