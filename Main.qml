@@ -12,7 +12,7 @@ ApplicationWindow {
     // ============================================================
     // FLAG SWITCH MOCK/REAL — đổi 1 dòng để chuyển toàn app
     // ============================================================
-    readonly property bool useMocks: false
+    readonly property bool useMocks: true
 
     // Mock instance (luôn được tạo, chỉ dùng nếu useMocks=true)
     MockAuthController { id: mockAuth }
@@ -112,6 +112,10 @@ ApplicationWindow {
                 root.currentTopDetailUserId = uid
                 stack.replace(topDetailPage)
             }
+            onOpenResourceDetail: function(rid) {
+                root.currentResourceDetailId = rid
+                stack.replace(resourceDetailPage)
+            }
             resource: root.resource
             gemini: root.gemini                                  // ← Người C thêm
         }
@@ -168,5 +172,16 @@ ApplicationWindow {
             }
         }
     }
-
+    property int currentResourceDetailId: -1
+    Component {
+        id: resourceDetailPage
+        ResourceDetailView {
+            auth: root.auth
+            resource: root.resource
+            adminUser: root.adminUser
+            adminGroup: root.adminGroup
+            resourceId: root.currentResourceDetailId
+            onBackRequested: stack.replace(welcomePage)
+        }
+    }
 }

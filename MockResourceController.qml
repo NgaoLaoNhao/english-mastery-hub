@@ -54,4 +54,96 @@ QtObject {
         if (t === "link")  return "Liên kết"
         return "Khác"
     }
+    // ===== M7: Properties cho comments & likes =====
+    property var comments: [
+        { id: 1, resourceId: 1, userId: 2, body: "Tài liệu này hay quá, cảm ơn anh đã chia sẻ!", createdAt: "2026-04-20T10:30:00" },
+        { id: 2, resourceId: 1, userId: 3, body: "Mình đã đọc xong, rất bổ ích.", createdAt: "2026-04-21T14:15:00" },
+        { id: 3, resourceId: 2, userId: 2, body: "File này download được không nhỉ?", createdAt: "2026-04-22T09:00:00" }
+    ]
+    property int _nextCommentId: 4
+
+    // likes: array { resourceId, userId } — 1 user có thể like 1 resource 1 lần
+    property var likes: [
+        { resourceId: 1, userId: 2 },
+        { resourceId: 1, userId: 3 },
+        { resourceId: 2, userId: 1 }
+    ]
+
+    // ===== M7: Signals =====
+    signal commentAdded(int id, int resourceId)
+    signal commentDeleted(int id)
+    signal likeToggled(int resourceId, int userId, bool liked)
+
+    // ===== M7: Methods detail =====
+    function getResourceById(resourceId) {
+        if (!resources) return null
+        for (var i = 0; i < resources.length; i++) {
+            if (resources[i].id === resourceId) return resources[i]
+        }
+        return null
+    }
+
+    function getComments(resourceId) {
+        var rows = []
+        for (var i = 0; i < comments.length; i++) {
+            if (comments[i].resourceId === resourceId) rows.push(comments[i])
+        }
+        // Mới nhất ở dưới (chat-style)
+        rows.sort(function(a, b) { return a.createdAt < b.createdAt ? -1 : 1 })
+        return rows
+    }
+
+    function addComment(resourceId, userId, body) {
+        var trimmed = String(body || "").trim()
+        if (trimmed.length === 0) return
+        var newCmt = {
+            id: _nextCommentId++,
+            resourceId: resourceId,
+            userId: userId,
+            body: trimmed,
+            createdAt: new Date().toISOString()
+        }
+        comments = comments.concat([newCmt])
+        commentAdded(newCmt.id, resourceId)
+    }
+
+    function deleteComment(commentId) {
+        comments = comments.filter(function(c) { return c.id !== commentId })
+        commentDeleted(commentId)
+    }
+
+    function getLikeCount(resourceId) {
+        var n = 0
+        for (var i = 0; i < likes.length; i++) {
+            if (likes[i].resourceId === resourceId) n++
+        }
+        return n
+    }
+
+    function hasLiked(resourceId, userId) {
+        for (var i = 0; i < likes.length; i++) {
+            if (likes[i].resourceId === resourceId && likes[i].userId === userId) return true
+        }
+        return false
+    }
+
+    function toggleLike(resourceId, userId) {
+        var found = -1
+        for (var i = 0; i < likes.length; i++) {
+            if (likes[i].resourceId === resourceId && likes[i].userId === userId) {
+                found = i; break
+            }
+        }
+        if (found >= 0) {
+            // Unlike
+            var newLikes = likes.slice()
+            newLikes.splice(found, 1)
+            likes = newLikes
+            likeToggled(resourceId, userId, false)
+        } else {
+            // Like
+            likes = likes.concat([{ resourceId: resourceId, userId: userId }])
+            likeToggled(resourceId, userId, true)
+        }
+    }
 }

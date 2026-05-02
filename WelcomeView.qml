@@ -17,6 +17,7 @@ Item {
     signal openPersonal()
     signal openGroupDetail(int groupId)
     signal openTopDetail(int userId)
+    signal openResourceDetail(int resourceId)
     readonly property bool isAdmin: auth && auth.currentRole === "admin"
 
     ColumnLayout {
@@ -202,6 +203,7 @@ Item {
                     auth: root.auth
                     adminUser: root.adminUser
                     adminGroup: root.adminGroup
+                    onResourceClicked: function(rid) { root.openResourceDetail(rid) }
                 }
                 // Future placeholder
                 // ===== Phase A5: Backend Admin Tools =====

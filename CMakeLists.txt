@@ -53,6 +53,7 @@ qt_add_qml_module(appEnglishMasteryHub
         GroupDailyChart.qml
         TopDetailView.qml
         MockGeminiController.qml
+        ResourceDetailView.qml
     SOURCES
         core/databasemanager.h
         core/databasemanager.cpp
@@ -60,6 +61,8 @@ qt_add_qml_module(appEnglishMasteryHub
         core/geminicontroller.cpp
         controllers/authcontroller.h
         controllers/authcontroller.cpp
+        QML_FILES ResourceDetailView.qml
+        QML_FILES ResourceCommentsSection.qml
 )
 
 target_link_libraries(appEnglishMasteryHub

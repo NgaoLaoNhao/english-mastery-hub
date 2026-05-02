@@ -4,6 +4,7 @@ import QtQuick.Layouts
 
 ColumnLayout {
     id: root
+    signal resourceClicked(int resourceId)
     Layout.fillWidth: true
     spacing: 12
 
@@ -39,6 +40,15 @@ ColumnLayout {
         for (var i = 0; i < gs.length; i++)
             if (gs[i].id === item.groupId && gs[i].leaderId === currentUserId) return true
         return false
+    }
+
+    // Lookup nhóm theo id để hiện tên thay vì #id
+    function _groupName(gid) {
+        if (gid <= 0 || !adminGroup) return ""
+        var gs = adminGroup.groups || []
+        for (var i = 0; i < gs.length; i++)
+            if (gs[i].id === gid) return gs[i].name
+        return "#" + gid
     }
 
     readonly property var filtered: {
@@ -102,20 +112,25 @@ ColumnLayout {
         Repeater {
             model: root.filtered
             delegate: Rectangle {
+                id: card
                 required property var modelData
                 Layout.fillWidth: true
                 Layout.preferredHeight: row.implicitHeight + 20
                 radius: 10
-                color: ma.containsMouse ? "#f8fafc" : "white"
-                border.color: "#e2e8f0"
-                border.width: 1
+                color: ma.containsMouse ? "#faf5ff" : "white"
+                border.color: ma.containsMouse ? "#a855f7" : "#e2e8f0"
+                border.width: ma.containsMouse ? 2 : 1
 
+                // MouseArea card → mở DETAIL VIEW (không mở URL nữa)
                 MouseArea {
                     id: ma
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: Qt.openUrlExternally(modelData.url)
+                    onClicked: {
+                        if (card.modelData && card.modelData.id !== undefined)
+                            root.resourceClicked(card.modelData.id)
+                    }
                 }
 
                 RowLayout {
@@ -129,7 +144,7 @@ ColumnLayout {
                         Layout.preferredHeight: 56
                         radius: 8
                         color: {
-                            var t = modelData.type
+                            var t = card.modelData.type
                             if (t === "pdf")   return "#fee2e2"
                             if (t === "video") return "#dbeafe"
                             if (t === "audio") return "#fef3c7"
@@ -138,7 +153,7 @@ ColumnLayout {
                         }
                         Label {
                             anchors.centerIn: parent
-                            text: root.resource ? root.resource.typeIcon(modelData.type) : "📎"
+                            text: root.resource ? root.resource.typeIcon(card.modelData.type) : "📎"
                             font.pixelSize: 28
                         }
                     }
@@ -147,7 +162,7 @@ ColumnLayout {
                         Layout.fillWidth: true
                         spacing: 2
                         Label {
-                            text: modelData.title
+                            text: card.modelData.title
                             font.pixelSize: 15
                             font.bold: true
                             color: "#0f172a"
@@ -155,27 +170,30 @@ ColumnLayout {
                             Layout.fillWidth: true
                         }
                         Label {
-                            text: (root.resource ? root.resource.typeLabel(modelData.type) : modelData.type)
-                                  + "  •  Đăng bởi " + modelData.uploadedBy
-                                  + "  •  " + modelData.addedAt
-                                  + (modelData.groupId > 0 ? "  •  Nhóm #" + modelData.groupId : "  •  Chung")
+                            text: (root.resource ? root.resource.typeLabel(card.modelData.type) : card.modelData.type)
+                                  + "  •  Đăng bởi " + card.modelData.uploadedBy
+                                  + "  •  " + card.modelData.addedAt
+                                  + (card.modelData.groupId > 0
+                                        ? "  •  " + root._groupName(card.modelData.groupId)
+                                        : "  •  Chung")
                             color: "#64748b"
                             font.pixelSize: 12
                         }
                     }
 
+                    // Nút "Mở" giữ nguyên — mở URL bên ngoài (z trên MouseArea card)
                     Button {
                         text: "Mở"
-                        onClicked: Qt.openUrlExternally(modelData.url)
+                        onClicked: Qt.openUrlExternally(card.modelData.url)
                     }
                     Button {
-                        visible: root.canDelete(modelData)
+                        visible: root.canDelete(card.modelData)
                         text: "🗑"
                         ToolTip.text: "Xóa"
                         ToolTip.visible: hovered
                         onClicked: {
-                            confirmDel.itemId = modelData.id
-                            confirmDel.itemTitle = modelData.title
+                            confirmDel.itemId = card.modelData.id
+                            confirmDel.itemTitle = card.modelData.title
                             confirmDel.open()
                         }
                     }
