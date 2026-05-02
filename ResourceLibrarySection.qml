@@ -13,6 +13,9 @@ ColumnLayout {
     property var adminGroup: null
     property string filterType: "all"
 
+    // ===== M7 D.2: Signal navigate sang Resource Detail =====
+    signal resourceClicked(int resourceId)
+
     readonly property string currentRole:     auth ? (auth.currentRole     || "") : ""
     readonly property string currentUsername: auth ? (auth.currentUsername || "") : ""
     readonly property int currentUserId: {
@@ -41,7 +44,18 @@ ColumnLayout {
         return false
     }
 
+    // Tick để re-evaluate khi resource thay đổi
+    property int _tick: 0
+    Connections {
+        target: resource
+        function onResourceAdded(id)      { root._tick++ }
+        function onResourceDeleted(id)    { root._tick++ }
+        function onLikeToggled(rid, uid, liked) { root._tick++ }
+        function onCommentAdded(id, rid)  { root._tick++ }
+    }
+
     readonly property var filtered: {
+        _tick
         if (!resource) return []
         return resource.getByType(filterType)
     }
@@ -107,15 +121,16 @@ ColumnLayout {
                 Layout.preferredHeight: row.implicitHeight + 20
                 radius: 10
                 color: ma.containsMouse ? "#f8fafc" : "white"
-                border.color: "#e2e8f0"
-                border.width: 1
+                border.color: ma.containsMouse ? "#a855f7" : "#e2e8f0"
+                border.width: ma.containsMouse ? 2 : 1
 
                 MouseArea {
                     id: ma
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: Qt.openUrlExternally(modelData.url)
+                    // ===== M7 D.2: click card → navigate Detail (KHÔNG mở URL) =====
+                    onClicked: root.resourceClicked(modelData.id)
                 }
 
                 RowLayout {
@@ -164,9 +179,24 @@ ColumnLayout {
                         }
                     }
 
+                    // Nút "Mở" → mở URL trực tiếp (không vào Detail)
                     Button {
-                        text: "Mở"
-                        onClicked: Qt.openUrlExternally(modelData.url)
+                        text: "🌐 Mở"
+                        ToolTip.text: "Mở URL trực tiếp"
+                        ToolTip.visible: hovered
+                        onClicked: {
+                            Qt.openUrlExternally(modelData.url)
+                            // Chặn click lan ra MouseArea phía sau
+                            mouse.accepted = true
+                        }
+                    }
+                    // Nút "Chi tiết" → vào trang Detail (giống click card)
+                    Button {
+                        text: "📖"
+                        ToolTip.text: "Xem chi tiết"
+                        ToolTip.visible: hovered
+                        highlighted: true
+                        onClicked: root.resourceClicked(modelData.id)
                     }
                     Button {
                         visible: root.canDelete(modelData)
