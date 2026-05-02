@@ -53,6 +53,19 @@ qt_add_qml_module(appEnglishMasteryHub
         GroupDailyChart.qml
         TopDetailView.qml
         MockGeminiController.qml
+        # ===== M7 =====
+        ResourceDetailView.qml
+        ResourceCommentsSection.qml
+        # ===== M8 =====
+        MockNotificationController.qml
+        NotificationToastHost.qml
+        # ===== M8 E.3 + E.4 =====
+        NotificationBell.qml
+        NotificationCenter.qml
+        controllers/MockPdfExporter.qml
+        PdfPreviewDialog.qml
+        PdfPreviewGroupDialog.qml
+        PdfPreviewTopBoardDialog.qml
     SOURCES
         core/databasemanager.h
         core/databasemanager.cpp
@@ -60,6 +73,12 @@ qt_add_qml_module(appEnglishMasteryHub
         core/geminicontroller.cpp
         controllers/authcontroller.h
         controllers/authcontroller.cpp
+        QML_FILES NotificationCenter.qml
+        QML_FILES NotificationBell.qml
+        QML_FILES controllers/MockPdfExporter.qml
+        QML_FILES PdfPreviewDialog.qml
+        QML_FILES PdfPreviewGroupDialog.qml
+        QML_FILES PdfPreviewTopBoardDialog.qml
 )
 
 target_link_libraries(appEnglishMasteryHub
