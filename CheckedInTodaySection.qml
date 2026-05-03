@@ -5,6 +5,7 @@ import QtQuick.Layouts
 ColumnLayout {
     id: root
     property var checkin: null
+    property var theme: null
     spacing: 8
     Layout.fillWidth: true
 
@@ -22,8 +23,8 @@ ColumnLayout {
 
     Rectangle {
         Layout.fillWidth: true
-        color: "#f8f8f8"
-        border.color: "#ddd"
+        color: theme && theme.isDark ? "#1e293b" : "#f8f8f8"
+        border.color: theme && theme.isDark ? "#334155" : "#ddd"
         border.width: 1
         radius: 6
         implicitHeight: contentCol.implicitHeight + 24
@@ -46,8 +47,8 @@ ColumnLayout {
                 delegate: Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 60
-                    color: "white"
-                    border.color: "#d4edda"
+                    color: theme && theme.isDark ? "#1a2e3b" : "white"
+                    border.color: theme && theme.isDark ? "#2d4a3f" : "#d4edda"
                     radius: 4
 
                     RowLayout {
@@ -76,6 +77,7 @@ ColumnLayout {
                             Label {
                                 text: modelData.fullName || modelData.username
                                 font.bold: true; elide: Text.ElideRight; Layout.fillWidth: true
+                                color: theme ? theme.colors.text : "#0f172a"
                             }
                             Label {
                                 property var c: root.getUserCheckin(modelData.id)
@@ -86,7 +88,7 @@ ColumnLayout {
                                        + " ✍" + c.writing.toFixed(1)
                                        + " 🔤" + c.vocabulary.toFixed(1)
                                        + (c.note ? "  ·  💬 " + c.note : "")) : ""
-                                color: "#555"; font.pixelSize: 11
+                                color: theme ? theme.colors.textMuted : "#555"; font.pixelSize: 11
                                 elide: Text.ElideRight; Layout.fillWidth: true
                             }
                         }

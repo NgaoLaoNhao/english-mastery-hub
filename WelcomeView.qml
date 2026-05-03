@@ -13,6 +13,7 @@ Item {
     property var resource: null
     property var gemini: null
     property var notification: null
+    property var theme: null
 
     signal logoutRequested()
     signal openAdminPanel()
@@ -41,7 +42,7 @@ Item {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 56
-            color: "#1f1f2e"
+            color: theme ? theme.colors.headerBg : "#1f1f2e"
             z: 10
 
             RowLayout {
@@ -52,7 +53,7 @@ Item {
 
                 Label {
                     text: "📚 English Mastery Hub"
-                    color: "white"
+                    color: theme ? theme.colors.headerText : "white"
                     font.pixelSize: 16
                     font.bold: true
                 }
@@ -73,7 +74,7 @@ Item {
                         id: nameLabel
                         anchors.centerIn: parent
                         text: auth ? ("👋 " + (auth.currentDisplayName || auth.currentUsername)) : ""
-                        color: "#ddd"
+                        color: theme ? theme.colors.headerSubText : "#ddd"
                         font.pixelSize: 13
                     }
 
@@ -100,6 +101,14 @@ Item {
                     }
                 }
 
+                // ===== Dark/Light Mode Toggle =====
+                Button {
+                    text: theme ? theme.colors.toggleIcon : "🌙"
+                    ToolTip.text: theme ? theme.colors.toggleTooltip : "Chuyển dark mode"
+                    ToolTip.visible: hovered
+                    ToolTip.delay: 300
+                    onClicked: { if (theme) theme.toggle() }
+                }
                 Button {
                     text: "🛠 Quản trị"
                     visible: root.isAdmin
@@ -130,9 +139,9 @@ Item {
                     Layout.topMargin: 16
                     Layout.leftMargin: 20
                     Layout.rightMargin: 20
-                    color: "#eef6ff"
+                    color: theme && theme.isDark ? "#1e3a5f" : "#eef6ff"
                     radius: 8
-                    border.color: "#cfe0f4"
+                    border.color: theme && theme.isDark ? "#2d4a6f" : "#cfe0f4"
                     Label {
                         anchors.left: parent.left
                         anchors.leftMargin: 14
@@ -142,6 +151,7 @@ Item {
                                 + "  ·  " + (auth.currentRole === "admin" ? "Quản trị" : "Thành viên")
                               : ""
                         font.pixelSize: 15
+                        color: theme ? theme.colors.text : "#0f172a"
                     }
                 }
 
@@ -156,6 +166,7 @@ Item {
                     canEdit: root.isAdmin
                     bgColor: "#fff7e6"
                     borderColor: "#daa520"
+                    theme: root.theme
                     onEditClicked: {
                         editDocsLabel.text = appSettings ? appSettings.importantDocsLabel : ""
                         editDocsUrl.text   = appSettings ? appSettings.importantDocsUrl : ""
@@ -173,6 +184,7 @@ Item {
                     canEdit: root.isAdmin
                     bgColor: "#fff0f0"
                     borderColor: "#e74c3c"
+                    theme: root.theme
                     onEditClicked: {
                         editAnnouncement.text = appSettings ? appSettings.announcement : ""
                         editAnnouncementDialog.open()
@@ -190,6 +202,7 @@ Item {
                         Layout.preferredWidth: 1
                         auth: root.auth
                         checkin: root.checkin
+                        theme: root.theme
                     }
                     WantedBoardSection {
                         Layout.fillWidth: true
@@ -197,6 +210,8 @@ Item {
                         auth: root.auth
                         checkin: root.checkin
                         gemini: root.gemini
+                        theme: root.theme
+                        onAiRequested: root._aiRequestSource = "welcome"
                     }
                 }
 
@@ -205,7 +220,10 @@ Item {
                     Layout.leftMargin: 20
                     Layout.rightMargin: 20
                     spacing: 0
-                    CheckedInTodaySection { checkin: root.checkin }
+                    CheckedInTodaySection {
+                        checkin: root.checkin
+                        theme: root.theme
+                    }
                 }
 
                 ColumnLayout {
@@ -263,7 +281,10 @@ Item {
                         auth: root.auth
                         adminUser: root.adminUser
                         adminGroup: root.adminGroup
+                        gemini: root.gemini
+                        theme: root.theme
                         onResourceClicked: function(rid) { root.openResourceDetail(rid) }
+                        onAiRequested: root._aiRequestSource = "resource"
                     }
                 }
 
@@ -332,8 +353,10 @@ Item {
             if (appSettings) appSettings.updateAnnouncement(editAnnouncement.text)
         }
     }
+    // ===== AI: track source to prevent double popup =====
+    property string _aiRequestSource: ""
 
-    // ===== AI Result Popup =====
+    // ===== AI Result Popup (chỉ mở khi source = "welcome") =====
     Dialog {
         id: aiResultDialog
         modal: true
@@ -365,10 +388,14 @@ Item {
 
     Connections {
         target: gemini
-        function onResponseReceived(text) { aiResultDialog.open() }
+        function onResponseReceived(text) {
+            if (root._aiRequestSource === "welcome") aiResultDialog.open()
+        }
         function onErrorOccurred(error) {
-            aiResultDialog.title = "❌ Lỗi AI"
-            aiResultDialog.open()
+            if (root._aiRequestSource === "welcome") {
+                aiResultDialog.title = "❌ Lỗi AI"
+                aiResultDialog.open()
+            }
         }
     }
 }

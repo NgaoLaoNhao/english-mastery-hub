@@ -13,6 +13,7 @@ Item {
     property var adminGroup: null
     property var gemini: null
     property var pdfExporter: null
+    property var theme: null
     signal backRequested()
 
     readonly property int myUserId: auth ? auth.currentUserId : -1
@@ -46,7 +47,7 @@ Item {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 56
-            color: "#1f1f2e"; z: 10
+            color: theme ? theme.colors.headerBg : "#1f1f2e"; z: 10
 
             RowLayout {
                 anchors.fill: parent
@@ -60,7 +61,7 @@ Item {
 
                 Label {
                     text: "👤 Trang cá nhân"
-                    color: "white"; font.pixelSize: 16; font.bold: true
+                    color: theme ? theme.colors.headerText : "white"; font.pixelSize: 16; font.bold: true
                     Layout.leftMargin: 12
                 }
 
@@ -68,7 +69,7 @@ Item {
 
                 Label {
                     text: auth ? (auth.currentDisplayName || auth.currentUsername) : ""
-                    color: "#ddd"; font.pixelSize: 13
+                    color: theme ? theme.colors.headerSubText : "#ddd"; font.pixelSize: 13
                 }
             }
         }
@@ -218,15 +219,15 @@ Item {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 90
                             radius: 10
-                            color: modelData.bg
-                            border.color: "#e2e8f0"; border.width: 1
+                            color: theme && theme.isDark ? Qt.darker(modelData.bg, 2.5) : modelData.bg
+                            border.color: theme && theme.isDark ? "#334155" : "#e2e8f0"; border.width: 1
 
                             ColumnLayout {
                                 anchors.fill: parent
                                 anchors.margins: 12
                                 spacing: 4
-                                Label { text: modelData.icon + " " + modelData.label; color: "#475569"; font.pixelSize: 12 }
-                                Label { text: modelData.value; color: "#0f172a"; font.pixelSize: 22; font.bold: true }
+                                Label { text: modelData.icon + " " + modelData.label; color: theme ? theme.colors.textMuted : "#475569"; font.pixelSize: 12 }
+                                Label { text: modelData.value; color: theme ? theme.colors.text : "#0f172a"; font.pixelSize: 22; font.bold: true }
                             }
                         }
                     }

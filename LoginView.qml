@@ -5,6 +5,7 @@ import QtQuick.Layouts
 Item {
     id: root
     property var auth: null
+    property var theme: null
     signal loginOk()
 
     ColumnLayout {
@@ -17,12 +18,13 @@ Item {
             font.pixelSize: 24
             font.bold: true
             Layout.alignment: Qt.AlignHCenter
+            color: theme ? theme.colors.text : "#0f172a"
         }
 
         Label {
             text: "Đăng nhập"
             font.pixelSize: 16
-            color: "#666"
+            color: theme ? theme.colors.textMuted : "#666"
             Layout.alignment: Qt.AlignHCenter
         }
 

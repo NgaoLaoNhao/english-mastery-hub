@@ -1,16 +1,10 @@
 import QtQuick
-import Qt.labs.settings
 
 QtObject {
     id: root
 
-    // ===== Persisted state =====
+    // ===== Theme state =====
     property string currentTheme: "light"   // "light" | "dark"
-
-    property Settings _persist: Settings {
-        category: "theme"
-        property alias themeName: root.currentTheme
-    }
 
     signal themeChanged(string newTheme)
 

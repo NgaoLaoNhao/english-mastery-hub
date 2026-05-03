@@ -7,8 +7,10 @@ ColumnLayout {
     property var auth: null
     property var checkin: null
     property var gemini: null
+    property var theme: null
     Layout.fillWidth: true
     spacing: 6
+    signal aiRequested()
 
     BannerHero {
         Layout.fillWidth: true
@@ -20,7 +22,8 @@ ColumnLayout {
 
     Rectangle {
         Layout.fillWidth: true
-        color: "#fff5f5"; border.color: "#fadbd8"; border.width: 1; radius: 6
+        color: theme && theme.isDark ? "#2d1b1b" : "#fff5f5"
+        border.color: theme && theme.isDark ? "#4a2020" : "#fadbd8"; border.width: 1; radius: 6
         implicitHeight: wantedCol.implicitHeight + 24
 
         ColumnLayout {
@@ -31,7 +34,7 @@ ColumnLayout {
 
             Label {
                 text: "🚨 " + (checkin && checkin.wantedList ? checkin.wantedList.length : 0) + " thành viên đang \"trốn check-in\""
-                font.bold: true; color: "#c0392b"
+                font.bold: true; color: theme && theme.isDark ? "#f87171" : "#c0392b"
             }
 
             Repeater {
@@ -39,7 +42,8 @@ ColumnLayout {
                 delegate: Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 50
-                    color: "white"; border.color: "#fadbd8"; radius: 4
+                    color: theme && theme.isDark ? "#1e293b" : "white"
+                    border.color: theme && theme.isDark ? "#4a2020" : "#fadbd8"; radius: 4
                     RowLayout {
                         anchors.fill: parent; anchors.margins: 8; spacing: 10
                         Rectangle {
@@ -62,8 +66,9 @@ ColumnLayout {
                             Label {
                                 text: modelData.fullName || modelData.username
                                 font.bold: true; elide: Text.ElideRight; Layout.fillWidth: true
+                                color: theme ? theme.colors.text : "#0f172a"
                             }
-                            Label { text: "@" + modelData.username; color: "#888"; font.pixelSize: 11 }
+                            Label { text: "@" + modelData.username; color: theme ? theme.colors.textMuted : "#888"; font.pixelSize: 11 }
                         }
                         Label { text: "⏳"; font.pixelSize: 20 }
                         Button {
@@ -71,6 +76,7 @@ ColumnLayout {
                             font.pixelSize: 11
                             onClicked: {
                                 if (root.gemini) {
+                                    root.aiRequested()
                                     root.gemini.generateWarning(modelData.fullName || modelData.username, 1)
                                 }
                             }

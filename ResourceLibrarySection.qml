@@ -11,10 +11,13 @@ ColumnLayout {
     property var auth: null
     property var adminUser: null
     property var adminGroup: null
+    property var gemini: null
+    property var theme: null
     property string filterType: "all"
 
     // ===== M7 D.2: Signal navigate sang Resource Detail =====
     signal resourceClicked(int resourceId)
+    signal aiRequested()
 
     readonly property string currentRole:     auth ? (auth.currentRole     || "") : ""
     readonly property string currentUsername: auth ? (auth.currentUsername || "") : ""
@@ -120,8 +123,11 @@ ColumnLayout {
                 Layout.fillWidth: true
                 Layout.preferredHeight: row.implicitHeight + 20
                 radius: 10
-                color: ma.containsMouse ? "#f8fafc" : "white"
-                border.color: ma.containsMouse ? "#a855f7" : "#e2e8f0"
+                color: ma.containsMouse
+                    ? (theme && theme.isDark ? "#334155" : "#f8fafc")
+                    : (theme && theme.isDark ? "#1e293b" : "white")
+                border.color: ma.containsMouse ? "#a855f7"
+                    : (theme && theme.isDark ? "#334155" : "#e2e8f0")
                 border.width: ma.containsMouse ? 2 : 1
 
                 MouseArea {
@@ -165,7 +171,7 @@ ColumnLayout {
                             text: modelData.title
                             font.pixelSize: 15
                             font.bold: true
-                            color: "#0f172a"
+                            color: theme ? theme.colors.text : "#0f172a"
                             elide: Label.ElideRight
                             Layout.fillWidth: true
                         }
@@ -174,7 +180,7 @@ ColumnLayout {
                                   + "  •  Đăng bởi " + modelData.uploadedBy
                                   + "  •  " + modelData.addedAt
                                   + (modelData.groupId > 0 ? "  •  Nhóm #" + modelData.groupId : "  •  Chung")
-                            color: "#64748b"
+                            color: theme ? theme.colors.textMuted : "#64748b"
                             font.pixelSize: 12
                         }
                     }
@@ -197,6 +203,19 @@ ColumnLayout {
                         ToolTip.visible: hovered
                         highlighted: true
                         onClicked: root.resourceClicked(modelData.id)
+                    }
+                    // Nút AI tóm tắt (Người C)
+                    Button {
+                        text: "📝 AI"
+                        font.pixelSize: 11
+                        ToolTip.text: "AI tóm tắt tài liệu"
+                        ToolTip.visible: hovered
+                        onClicked: {
+                            if (root.gemini) {
+                                root.aiRequested()
+                                root.gemini.summarizeResource(modelData.title + ": " + (modelData.url || ""))
+                            }
+                        }
                     }
                     Button {
                         visible: root.canDelete(modelData)
@@ -274,5 +293,43 @@ ColumnLayout {
         standardButtons: Dialog.Yes | Dialog.No
         onAccepted: if (itemId > 0) resource.deleteResource(itemId)
         Label { text: "Xóa tài liệu \"" + confirmDel.itemTitle + "\"?" }
+    }
+
+    // ===== AI Summary Popup (Người C) =====
+    Dialog {
+        id: aiSummaryDialog
+        modal: true
+        anchors.centerIn: Overlay.overlay
+        width: 520
+        title: "📝 AI Tóm Tắt Tài Liệu"
+        standardButtons: Dialog.Ok
+
+        ColumnLayout {
+            anchors.fill: parent; spacing: 10
+            BusyIndicator {
+                running: gemini && gemini.isLoading
+                Layout.alignment: Qt.AlignHCenter
+                visible: running
+            }
+            ScrollView {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 280
+                TextArea {
+                    text: gemini ? gemini.lastResponse : ""
+                    readOnly: true
+                    wrapMode: TextArea.Wrap
+                    font.pixelSize: 13
+                }
+            }
+        }
+    }
+
+    Connections {
+        target: gemini
+        function onResponseReceived(text) { aiSummaryDialog.open() }
+        function onErrorOccurred(error) {
+            aiSummaryDialog.title = "❌ Lỗi AI"
+            aiSummaryDialog.open()
+        }
     }
 }

@@ -8,6 +8,7 @@ ApplicationWindow {
     height: 800
     visible: true
     title: qsTr("English Mastery Hub")
+    color: theme ? theme.colors.pageBg : "#f8fafc"
 
     readonly property bool useMocks: true
 
@@ -54,6 +55,7 @@ ApplicationWindow {
         personal: mockPersonal
         groupDetail: mockGroupDetail
     }
+    MockThemeController          { id: mockTheme }
     // ============================================================
     // Property aliases
     // ============================================================
@@ -69,6 +71,7 @@ ApplicationWindow {
     readonly property var gemini:         useMocks ? mockGemini        : realGeminiController
     readonly property var notification:   useMocks ? mockNotification  : null
     readonly property var pdfExporter: useMocks ? mockPdfExporter : null
+    readonly property var theme:        mockTheme
     // ============================================================
     // State điều hướng
     // ============================================================
@@ -224,6 +227,7 @@ ApplicationWindow {
         id: loginPage
         LoginView {
             auth: root.auth
+            theme: root.theme
             onLoginOk: {
                 if (root.auth.mustChangePassword) stack.replace(changePassPage)
                 else stack.replace(welcomePage)
@@ -251,6 +255,7 @@ ApplicationWindow {
             resource: root.resource
             gemini: root.gemini
             notification: root.notification
+            theme: root.theme
 
             onLogoutRequested: { root.auth.logout(); stack.replace(loginPage) }
             onOpenAdminPanel: stack.replace(adminPanelPage)
@@ -292,6 +297,7 @@ ApplicationWindow {
             adminGroup: root.adminGroup
             gemini: root.gemini
             pdfExporter: root.pdfExporter
+            theme: root.theme
             onBackRequested: stack.replace(welcomePage)
         }
     }

@@ -6,6 +6,7 @@ ColumnLayout {
     id: root
     property var auth: null
     property var checkin: null
+    property var theme: null
     Layout.fillWidth: true
     spacing: 6
 
@@ -46,8 +47,8 @@ ColumnLayout {
     Rectangle {
         Layout.fillWidth: true
         Layout.preferredHeight: 50
-        color: "#f8f8f8"
-        border.color: "#ddd"; radius: 6
+        color: theme && theme.isDark ? "#1e293b" : "#f8f8f8"
+        border.color: theme && theme.isDark ? "#334155" : "#ddd"; radius: 6
         RowLayout {
             anchors.fill: parent; anchors.margins: 8; spacing: 8
 
